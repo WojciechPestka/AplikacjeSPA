@@ -1,0 +1,66 @@
+<!-- public/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Chat</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="chatContainer">
+        <div id="messages"></div>
+        <div id="inputContainer">
+            <input type="text" id="messageInput" placeholder="Enter your message...">
+            <button id="sendButton">Send</button>
+        </div>
+    </div>
+
+    <script>
+        const socket = new WebSocket('ws://localhost:3000');
+        const messagesDiv = document.getElementById('messages');
+        const messageInput = document.getElementById('messageInput');
+
+        let userColor = getRandomColor(); // Get random color for user
+
+        socket.onmessage = function (event) {
+            const messageData = JSON.parse(event.data);
+            const message = messageData.message;
+            const userColor = messageData.color;
+            messagesDiv.innerHTML += `<p style="color: ${userColor}">${message}</p>`;
+            messagesDiv.scrollTop = messagesDiv.scrollHeight; // Scroll down
+        };
+
+        document.getElementById('sendButton').addEventListener('click', () => {
+            sendMessage();
+        });
+
+        messageInput.addEventListener('keypress', (event) => {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        function sendMessage() {
+            const message = messageInput.value;
+            if (message.trim() !== '') {
+                const messageData = {
+                    message: message,
+                    color: userColor
+                };
+                socket.send(JSON.stringify(messageData));
+                messageInput.value = ''; // Clear message input
+            }
+        }
+
+        function getRandomColor() {
+            const letters = '0123456789ABCDEF';
+            let color = '#';
+            for (let i = 0; i < 6; i++) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
+        }
+    </script>
+</body>
+</html>
